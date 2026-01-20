@@ -1,0 +1,22 @@
+# MLC Compiled Models - Git Ignore
+
+# Ignore all large binary files
+**/weights/
+**/*.tar
+**/*.bin
+**/*.so
+**/*.jar
+**/*.zip
+**/*.a
+**/*.dylib
+
+# Ignore build artifacts
+model_artifacts/
+dist/
+build/
+.gradle/
+.idea/
+
+# System files
+.DS_Store
+*.swp
