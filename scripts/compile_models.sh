@@ -43,3 +43,7 @@ compile_model "HF://mlc-ai/Qwen2.5-0.5B-Instruct-q4f16_1-MLC" "qwen2_5_0_5b" "op
 compile_model "HF://mlc-ai/Qwen2.5-1.5B-Instruct-q4f16_1-MLC" "qwen2_5_1_5b" "cpu" "llvm" || echo "Failed 1.5B CPU"
 # compile_model "HF://mlc-ai/Qwen2.5-1.5B-Instruct-q4f16_1-MLC" "qwen2_5_1_5b" "vulkan" "vulkan" || echo "Failed 1.5B Vulkan"
 compile_model "HF://mlc-ai/Qwen2.5-1.5B-Instruct-q4f16_1-MLC" "qwen2_5_1_5b" "opencl" "opencl" || echo "Failed 1.5B OpenCL"
+
+# Qwen 3B
+compile_model "HF://mlc-ai/Qwen2.5-3B-Instruct-q4f16_1-MLC" "qwen2_5_3b" "cpu" "llvm" || echo "Failed 3B CPU"
+compile_model "HF://mlc-ai/Qwen2.5-3B-Instruct-q4f16_1-MLC" "qwen2_5_3b" "opencl" "opencl" || echo "Failed 3B OpenCL"

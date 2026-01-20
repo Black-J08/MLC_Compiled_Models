@@ -17,11 +17,8 @@ If you are developing the Recall app:
 
 We prioritize hardware acceleration while ensuring universal compatibility:
 
-| Backend | Capability | Status |
-|---------|------------|--------|
-| **Vulkan** | Native Android GPU (API 24+) | Primary Target |
-| **OpenCL** | Adreno/Mali GPU acceleration | Secondary Target |
-| **LLVM (CPU)** | Universal ARMv8-A compatibility | Reliable Fallback |
+| **Qwen 0.5B (Lite)** | Fast and efficient | Verified Assets |
+| **Gemma-3 270M** | Ultra-lightweight fallback | MediaPipe Only |
 
 ## Compilation & Automation
 
