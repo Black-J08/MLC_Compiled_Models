@@ -39,7 +39,7 @@ jobs:
 
       - name: Install MLC LLM & Tools
         run: |
-          python -m pip install --pre -U -f https://mlc.ai/wheels mlc-llm-nightly mlc-ai-nightly
+          python -m pip install --pre -U -f https://mlc.ai/wheels mlc-llm-nightly-cpu mlc-ai-nightly-cpu
           # Install huggingface_hub for potential CLI usage if needed, though script uses git
           python -m pip install huggingface_hub
 
