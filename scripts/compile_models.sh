@@ -46,8 +46,8 @@ if [ ! -f "$TVM_NDK_CC" ]; then
     exit 1
 fi
 
-export CC="$TVM_NDK_CC"
-export CXX="$TVM_NDK_CC"
+export CC="$TVM_NDK_CC -lm"
+export CXX="$TVM_NDK_CC -lm"
 
 echo "Using NDK: $ANDROID_NDK"
 echo "Using Compiler: $CC"
