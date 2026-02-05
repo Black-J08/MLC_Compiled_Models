@@ -130,6 +130,14 @@ package_model() {
         --system-lib-prefix "$model_lib_prefix" \
         -o "$cpu_lib"
 
+    # --- Verification ---
+    echo "    Verifying EntryPoint symbol: ${model_lib_prefix}_EntryPoint"
+    if ! nm -D "$cpu_lib" | grep -q "${model_lib_prefix}_EntryPoint"; then
+        echo "    Error: Required symbol ${model_lib_prefix}_EntryPoint missing in $cpu_lib"
+        exit 1
+    fi
+    echo "    Verified symbol: ${model_lib_prefix}_EntryPoint successfully."
+
     # --- 2. Compile for OpenCL ---
     # Temporarily disabled to ensure stable CI release. 
     # OpenCL requires specific target attributes (not mtriple) that differ from CPU.
