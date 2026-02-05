@@ -132,7 +132,7 @@ package_model() {
     
     echo "    Compiling for CPU (Static Objects) -> $cpu_tar"
     python3 -m mlc_llm compile "$compile_target" \
-        --device "llvm -mtriple=aarch64-linux-android" \
+        --device "llvm -keys=cpu,system_lib -mtriple=aarch64-linux-android" \
         --host "aarch64-linux-android" \
         --system-lib-prefix "$model_lib_prefix" \
         -o "$cpu_tar"
