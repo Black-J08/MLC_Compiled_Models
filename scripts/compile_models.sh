@@ -126,27 +126,30 @@ package_model() {
         -o "$cpu_lib"
 
     # --- 2. Compile for OpenCL ---
-    local opencl_lib="$lib_dir/${model_id}_opencl.so"
-    echo "    Compiling for OpenCL -> $opencl_lib"
-    python3 -m mlc_llm compile "$compile_target" \
-        --device "opencl -mtriple=aarch64-linux-android" \
-        --host "aarch64-linux-android" \
-        --system-lib-prefix "$model_lib_prefix" \
-        -o "$opencl_lib"
+    # Temporarily disabled to ensure stable CI release. 
+    # OpenCL requires specific target attributes (not mtriple) that differ from CPU.
+    # local opencl_lib="$lib_dir/${model_id}_opencl.so"
+    # echo "    Compiling for OpenCL -> $opencl_lib"
+    # python3 -m mlc_llm compile "$compile_target" \
+    #     --device "opencl -keys=opencl,gpu" \
+    #     --host "aarch64-linux-android" \
+    #     --system-lib-prefix "$model_lib_prefix" \
+    #     -o "$opencl_lib"
 
     # --- 3. Compile for Vulkan ---
-    local vulkan_lib="$lib_dir/${model_id}_vulkan.so"
-    echo "    Compiling for Vulkan -> $vulkan_lib"
-    python3 -m mlc_llm compile "$compile_target" \
-        --device "vulkan -mtriple=aarch64-linux-android" \
-        --host "aarch64-linux-android" \
-        --system-lib-prefix "$model_lib_prefix" \
-        -o "$vulkan_lib"
+    # Temporarily disabled
+    # local vulkan_lib="$lib_dir/${model_id}_vulkan.so"
+    # echo "    Compiling for Vulkan -> $vulkan_lib"
+    # python3 -m mlc_llm compile "$compile_target" \
+    #     --device "vulkan -keys=vulkan,gpu" \
+    #     --host "aarch64-linux-android" \
+    #     --system-lib-prefix "$model_lib_prefix" \
+    #     -o "$vulkan_lib"
 
     # --- Step C: Package & Split Artifacts ---
     echo "--> [Step C] Packaging Artifacts..."
 
-    local backends=("cpu" "vulkan" "opencl")
+    local backends=("cpu") # Temporarily removed "vulkan" "opencl"
 
     # 1. Weights Bundle {model}-weights.zip
     # Contains: params/, mlc-chat-config.json, tokenizer...
