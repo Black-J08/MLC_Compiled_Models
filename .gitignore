@@ -16,7 +16,9 @@ dist/
 build/
 .gradle/
 .idea/
+.venv/
 
-# System files
+# System and Log files
 .DS_Store
 *.swp
+*.log
