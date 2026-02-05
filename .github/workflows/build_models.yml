@@ -34,7 +34,7 @@ jobs:
         uses: nttld/setup-ndk@v1
         id: setup-ndk
         with:
-          ndk-version: r27.0.11718014
+          ndk-version: r27
           # This action sets ANDROID_NDK_HOME automatically
 
       - name: Install MLC LLM & Tools
