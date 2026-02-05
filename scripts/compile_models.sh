@@ -68,13 +68,30 @@ package_model() {
     
     mkdir -p "$params_dir"
 
-    # --- Step A: Download Weights ---
     echo "--> [Step A] Fetching Weights..."
     if [ ! -f "$model_build_dir/mlc-chat-config.json" ]; then
         echo "    Cloning from Hugging Face ($model_hf_url)..."
         # Temporarily clone to a temp dir to sort files
         local temp_clone_dir="$model_build_dir/temp_clone"
-        git clone --depth 1 "$model_hf_url" "$temp_clone_dir"
+        
+        # Retry logic for transient network errors (like 504)
+        local max_retries=3
+        local count=0
+        local success=false
+        while [ $count -lt $max_retries ]; do
+            if git clone --depth 1 "$model_hf_url" "$temp_clone_dir"; then
+                success=true
+                break
+            fi
+            count=$((count + 1))
+            echo "    Download failed (attempt $count). Retrying in 10 seconds..."
+            sleep 10
+        done
+
+        if [ "$success" = false ]; then
+            echo "    Error: Failed to download weights after $max_retries attempts."
+            exit 1
+        fi
 
         # Move essential config files to root of build dir
         mv "$temp_clone_dir/mlc-chat-config.json" "$model_build_dir/"
