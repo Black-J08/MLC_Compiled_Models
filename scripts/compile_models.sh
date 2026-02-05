@@ -134,6 +134,10 @@ package_model() {
     echo "    Verifying EntryPoint symbol: ${model_lib_prefix}_EntryPoint"
     if ! nm -D "$cpu_lib" | grep -q "${model_lib_prefix}_EntryPoint"; then
         echo "    Error: Required symbol ${model_lib_prefix}_EntryPoint missing in $cpu_lib"
+        echo "    Dumping symbols matching prefix '${model_lib_prefix}':"
+        nm -D "$cpu_lib" | grep "${model_lib_prefix}" || echo "    (No symbols match prefix)"
+        echo "    Top 20 symbols:"
+        nm -D "$cpu_lib" | head -n 20
         exit 1
     fi
     echo "    Verified symbol: ${model_lib_prefix}_EntryPoint successfully."
