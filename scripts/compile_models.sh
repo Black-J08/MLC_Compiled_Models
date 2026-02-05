@@ -37,20 +37,25 @@ if [ -z "$ANDROID_NDK" ]; then
 fi
 
 # Set compiler path
-if [ -z "$TVM_NDK_CC" ]; then
-    export TVM_NDK_CC="$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
+if [ -z "$TVM_NDK_REAL_CC" ]; then
+    export TVM_NDK_REAL_CC="$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
 fi
 
-if [ ! -f "$TVM_NDK_CC" ]; then
-    echo "Error: NDK Compiler not found at $TVM_NDK_CC"
+if [ ! -f "$TVM_NDK_REAL_CC" ]; then
+    echo "Error: NDK Compiler not found at $TVM_NDK_REAL_CC"
     exit 1
 fi
 
-export CC="$TVM_NDK_CC -lm"
-export CXX="$TVM_NDK_CC -lm"
+# Use the wrapper script to inject -lm
+export TVM_NDK_CC="$SCRIPT_DIR/android_clang_wrapper.sh"
+chmod +x "$TVM_NDK_CC"
+
+export CC="$TVM_NDK_CC"
+export CXX="$TVM_NDK_CC"
 
 echo "Using NDK: $ANDROID_NDK"
-echo "Using Compiler: $CC"
+echo "Using Wrapper Compiler: $CC"
+echo "Real Compiler: $TVM_NDK_REAL_CC"
 
 # --- 2. Build Function ---
 
