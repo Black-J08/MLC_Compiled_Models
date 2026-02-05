@@ -1,43 +1,70 @@
-# MLC LLM Compiled Models for Android (MVP)
+# MLC LLM Compiled Models for Android
 
-This repository serves as the central hub for the compiled **Qwen-0.5B** MLC LLM models used in the **Recall** Android app. 
+[![Build and Release Models](https://github.com/Black-J08/MLC_Compiled_Models/actions/workflows/build_models.yml/badge.svg)](https://github.com/Black-J08/MLC_Compiled_Models/actions/workflows/build_models.yml)
+
+This repository hosts the compiled **Qwen** and other MLC-compatible LLM models for the **Recall** Android app.
 
 > [!NOTE]
-> This repository is fully decoupled from the Recall mobile app code. The app consumes these models exclusively through GitHub Releases.
+> This repository is decoupled from the Recall app source code. The app consumes these models via **GitHub Releases**.
 
-## MVP Overview
+## Repository Structure
 
-The current MVP focuses on the **Qwen2.5-0.5B-Instruct** model to ensure a lightweight and efficient local AI experience.
+- `scripts/`: Build and release automation scripts.
+- `.github/workflows`: CI/CD automation for cloud builds.
+- `dist/`: Generated artifacts (ZIP bundles) ready for release.
 
-### 🚀 Integration for Recall App
-1. Model weights are packaged as `[model_id]_weights.zip`.
-2. Native libraries are packaged as `[model_id]_[backend].tar`.
-3. The Recall app downloads these assets from GitHub Releases (Version `v1.1.0+`).
+## CI/CD & Automation
 
-## Compilation & Development
+This repository uses **GitHub Actions** to automatically:
+1.  **Fetch Weights**: Downloads model parameters from Hugging Face.
+2.  **Compile Engines**: Builds native Android libraries (`.so`) for CPU, Vulkan, and OpenCL.
+3.  **Package**: Creates separate optimized ZIP files for distribution.
+4.  **Release**: Uploads assets to GitHub Releases when a tag (e.g., `v*`) is pushed.
 
-The `scripts/` directory contains tools to compile models locally.
+## 📱 Android Integration Guide
 
-### Prerequisites
-- [MLC LLM](https://llm.mlc.ai/docs/get_started/introduction.html)
-- Android NDK (r27+)
-- TVM with Vulkan/OpenCL/LLVM support
+The Recall app should fetch models from the [Releases Page](https://github.com/Black-J08/MLC_Compiled_Models/releases).
 
-### Build Commands
-To compile the Qwen-0.5B model for multiple backends:
-```bash
-./scripts/compile_models.sh
+### 1. Artifact Strategy (Split Download)
+To minimize bandwidth, artifacts are split into **Weights** and **Engines**.
+
+| Artifact Type | Filename Pattern | Content | Size |
+| :--- | :--- | :--- | :--- |
+| **Weights** | `{model}-weights.zip` | `params/`, `config.json` | ~1GB+ |
+| **Engine (CPU)** | `{model}-lib-cpu.zip` | `{model}_cpu.so` | ~5MB |
+| **Engine (OpenCL)** | `{model}-lib-opencl.zip` | `{model}_opencl.so` | ~5MB |
+| **Engine (Vulkan)** | `{model}-lib-vulkan.zip` | `{model}_vulkan.so` | ~5MB |
+
+### 2. Integration Logic (Kotlin)
+The app should download the **Weights** + **One Best Engine**.
+
+```kotlin
+// 1. Download Weights
+val weightsUrl = "$RELEASE_URL/qwen2_5_0_5b-weights.zip"
+downloadAndUnzip(weightsUrl, modelDir)
+
+// 2. Select & Download Engine
+val engineZip = when {
+    deviceSupportsOpenCL() -> "qwen2_5_0_5b-lib-opencl.zip"
+    deviceSupportsVulkan() -> "qwen2_5_0_5b-lib-vulkan.zip"
+    else -> "qwen2_5_0_5b-lib-cpu.zip"
+}
+downloadAndUnzip("$RELEASE_URL/$engineZip", modelDir)
+
+// 3. Initialize
+val engine = MLCEngine()
+engine.reload(modelDir.absolutePath, "qwen2_5_0_5b")
 ```
-Artifacts will be generated in the `dist/` directory (ignored by Git).
 
-## Hosting & Distribution
-
-We use **GitHub Releases** for distribution:
-- **Weights Bundle**: `qwen2_5_0_5b_weights.zip`
-- **Native Libraries**: 
-    - `qwen2_5_0_5b_cpu.tar`
-    - `qwen2_5_0_5b_vulkan.tar`
-    - `qwen2_5_0_5b_opencl.tar`
+### 3. File Structure on Device
+After unzipping both files into the same directory:
+```
+mlc_models/qwen2_5_0_5b/
+├── mlc-chat-config.json
+├── params/               # From weights.zip
+│   └── ...
+└── qwen2_5_0_5b_opencl.so # From lib-opencl.zip
+```
 
 ---
 *Maintained by the Recall Development Team.*

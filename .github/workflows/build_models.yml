@@ -1,0 +1,70 @@
+name: Build and Release Models
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v1.2.0
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  contents: write # Needed to upload assets to releases
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Free Disk Space
+        run: |
+          # Free up space on ubuntu runner for heavy compilations
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r27.0.11718014
+          # This action sets ANDROID_NDK_HOME automatically
+
+      - name: Install MLC LLM & Tools
+        run: |
+          python -m pip install --pre -U -f https://mlc.ai/wheels mlc-llm-nightly mlc-ai-nightly
+          # Install huggingface_hub for potential CLI usage if needed, though script uses git
+          python -m pip install huggingface_hub
+
+      - name: Compile and Package Models
+        env:
+          # Pass the NDK path explicitly if needed, though action sets ANDROID_NDK_HOME
+          ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: |
+          chmod +x ./scripts/compile_models.sh
+          ./scripts/compile_models.sh
+
+      - name: Verify Artifacts
+        run: |
+          echo "Listing dist directory:"
+          ls -R dist/
+          
+          echo "Verifying ZIP integrity..."
+          for f in dist/*.zip; do unzip -t "$f"; done
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            dist/*.zip
+            dist/*.sha256
+          generate_release_notes: true
