@@ -95,23 +95,38 @@ package_model() {
     local lib_dir="$model_build_dir/libs"
     mkdir -p "$lib_dir"
 
-    local backends=("cpu" "vulkan" "opencl")
     local hf_format="HF://${model_hf_url#https://huggingface.co/}"
 
-    for backend in "${backends[@]}"; do
-        local output_lib="$lib_dir/${model_id}_${backend}.so"
-        echo "    Compiling for $backend -> $output_lib"
-        
-        # Compile command
-        python3 -m mlc_llm compile "$hf_format" \
-            --device "$backend" \
-            --host aarch64-linux-android \
-            --system-lib-prefix "$model_lib_prefix" \
-            -o "$output_lib"
-    done
+    # --- 1. Compile for CPU ---
+    local cpu_lib="$lib_dir/${model_id}_cpu.so"
+    echo "    Compiling for CPU -> $cpu_lib"
+    python3 -m mlc_llm compile "$hf_format" \
+        --target "llvm -mtriple=aarch64-linux-android" \
+        --system-lib-prefix "$model_lib_prefix" \
+        -o "$cpu_lib"
+
+    # --- 2. Compile for OpenCL ---
+    local opencl_lib="$lib_dir/${model_id}_opencl.so"
+    echo "    Compiling for OpenCL -> $opencl_lib"
+    python3 -m mlc_llm compile "$hf_format" \
+        --target "opencl -mtriple=aarch64-linux-android" \
+        --host "llvm -mtriple=aarch64-linux-android" \
+        --system-lib-prefix "$model_lib_prefix" \
+        -o "$opencl_lib"
+
+    # --- 3. Compile for Vulkan ---
+    local vulkan_lib="$lib_dir/${model_id}_vulkan.so"
+    echo "    Compiling for Vulkan -> $vulkan_lib"
+    python3 -m mlc_llm compile "$hf_format" \
+        --target "vulkan -mtriple=aarch64-linux-android" \
+        --host "llvm -mtriple=aarch64-linux-android" \
+        --system-lib-prefix "$model_lib_prefix" \
+        -o "$vulkan_lib"
 
     # --- Step C: Package & Split Artifacts ---
     echo "--> [Step C] Packaging Artifacts..."
+
+    local backends=("cpu" "vulkan" "opencl")
 
     # 1. Weights Bundle {model}-weights.zip
     # Contains: params/, mlc-chat-config.json, tokenizer...
