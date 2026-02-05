@@ -122,13 +122,27 @@ package_model() {
     echo "    Using local model path: $compile_target"
 
     # --- 1. Compile for CPU ---
+    # NOTE: We must compile to .tar (static objects) first to ensure --system-lib-prefix is respected.
+    # Direct .so compilation ignores the prefix.
+    local cpu_tar="$lib_dir/${model_id}_cpu.tar"
+    local cpu_obj_dir="$lib_dir/${model_id}_cpu_objs"
     local cpu_lib="$lib_dir/${model_id}_cpu.so"
-    echo "    Compiling for CPU -> $cpu_lib"
+    
+    mkdir -p "$cpu_obj_dir"
+    
+    echo "    Compiling for CPU (Static Objects) -> $cpu_tar"
     python3 -m mlc_llm compile "$compile_target" \
         --device "llvm -mtriple=aarch64-linux-android" \
         --host "aarch64-linux-android" \
         --system-lib-prefix "$model_lib_prefix" \
-        -o "$cpu_lib"
+        -o "$cpu_tar"
+
+    echo "    Extracting objects..."
+    tar -xf "$cpu_tar" -C "$cpu_obj_dir"
+
+    echo "    Linking shared library -> $cpu_lib"
+    # Link all extracted .o files into the shared library
+    "$CC" -shared -o "$cpu_lib" "$cpu_obj_dir"/*.o
 
     # --- Verification ---
     echo "    Verifying EntryPoint symbol: ${model_lib_prefix}_EntryPoint"
@@ -141,6 +155,10 @@ package_model() {
         exit 1
     fi
     echo "    Verified symbol: ${model_lib_prefix}_EntryPoint successfully."
+    
+    # Cleanup intermediate files
+    rm "$cpu_tar"
+    rm -rf "$cpu_obj_dir"
 
     # --- 2. Compile for OpenCL ---
     # Temporarily disabled to ensure stable CI release. 
