@@ -131,10 +131,11 @@ package_model() {
     mkdir -p "$cpu_obj_dir"
     
     echo "    Compiling for CPU (Static Objects) -> $cpu_tar"
+    echo "    Debug: model_lib_prefix='$model_lib_prefix'"
     python3 -m mlc_llm compile "$compile_target" \
         --device "llvm -keys=cpu,system_lib -mtriple=aarch64-linux-android" \
         --host "aarch64-linux-android" \
-        --system-lib-prefix "$model_lib_prefix" \
+        --system-lib-prefix="${model_lib_prefix}" \
         -o "$cpu_tar"
 
     echo "    Extracting objects..."
