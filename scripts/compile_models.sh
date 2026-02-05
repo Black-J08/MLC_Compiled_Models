@@ -112,12 +112,14 @@ package_model() {
     local lib_dir="$model_build_dir/libs"
     mkdir -p "$lib_dir"
 
-    local hf_format="HF://${model_hf_url#https://huggingface.co/}"
+    # CRITICAL CHANGE: Use local directory for compilation to avoid HF timeouts
+    local compile_target="$model_build_dir"
+    echo "    Using local model path: $compile_target"
 
     # --- 1. Compile for CPU ---
     local cpu_lib="$lib_dir/${model_id}_cpu.so"
     echo "    Compiling for CPU -> $cpu_lib"
-    python3 -m mlc_llm compile "$hf_format" \
+    python3 -m mlc_llm compile "$compile_target" \
         --target "llvm -mtriple=aarch64-linux-android" \
         --system-lib-prefix "$model_lib_prefix" \
         -o "$cpu_lib"
@@ -125,7 +127,7 @@ package_model() {
     # --- 2. Compile for OpenCL ---
     local opencl_lib="$lib_dir/${model_id}_opencl.so"
     echo "    Compiling for OpenCL -> $opencl_lib"
-    python3 -m mlc_llm compile "$hf_format" \
+    python3 -m mlc_llm compile "$compile_target" \
         --target "opencl -mtriple=aarch64-linux-android" \
         --host "llvm -mtriple=aarch64-linux-android" \
         --system-lib-prefix "$model_lib_prefix" \
@@ -134,7 +136,7 @@ package_model() {
     # --- 3. Compile for Vulkan ---
     local vulkan_lib="$lib_dir/${model_id}_vulkan.so"
     echo "    Compiling for Vulkan -> $vulkan_lib"
-    python3 -m mlc_llm compile "$hf_format" \
+    python3 -m mlc_llm compile "$compile_target" \
         --target "vulkan -mtriple=aarch64-linux-android" \
         --host "llvm -mtriple=aarch64-linux-android" \
         --system-lib-prefix "$model_lib_prefix" \
